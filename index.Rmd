@@ -1,36 +1,188 @@
 ---
 title: "Supervisor Survey"
-output: 
+output:
   flexdashboard::flex_dashboard:
-    orientation: columns
-    vertical_layout: fill
+    orientation: rows
+    social: menu
+    source_code: embed
+    vertical_layout: scroll
+    theme: yeti
+resource_files:
+- data/supervisor_survey.sav
 ---
 
-```{r setup, include=FALSE}
-library(flexdashboard)
+```{r global, include=FALSE}
+library(shiny)
+library(tidyverse)
+library(here)
+library(janitor)
+library(rio)
+library(colorblindr)
+library(gghighlight)
+library(forcats)
+library(ggrepel)
+library(gt)
+library(knitr)
+library(kableExtra)
+library(reactable)
+library(plotly)
+library(glue)
+library(fs)
+library(prettydoc)
+
+theme_fivethirtyeight <- function(base_size = 15, base_family = "") {
+  theme_grey(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+      
+      # Base elements which are not used directly but inherited by others
+      line =              element_line(colour = '#DADADA', size = 0.75, 
+                                       linetype = 1, lineend = "butt"),
+      rect =              element_rect(fill = "#F0F0F0", colour = "#F0F0F0", 
+                                       size = 0.5, linetype = 1),
+      text =              element_text(family = base_family, face = "plain",
+                                       colour = "#656565", size = base_size,
+                                       hjust = 0.5, vjust = 0.5, angle = 0, 
+                                       lineheight = 0.9),
+      
+      # Modified inheritance structure of text element
+      plot.title =        element_text(size = rel(1.5), family = '' , 
+                                       face = 'bold', hjust = -0.05, 
+                                       vjust = 1.5, colour = '#3B3B3B'),
+      axis.title.x =      element_blank(),
+      axis.title.y =      element_blank(),
+      axis.text =         element_text(),
+      
+      # Modified inheritance structure of line element
+      axis.ticks =        element_line(),
+      panel.grid.major =  element_line(),
+      panel.grid.minor =  element_blank(),
+      
+      # Modified inheritance structure of rect element
+      plot.background =   element_rect(),
+      panel.background =  element_rect(),
+      legend.key =        element_rect(colour = '#DADADA'),
+      
+      # Modifiying legend.position
+      legend.position = 'none',
+      
+      complete = TRUE
+    )
+}
+
+
+theme_set(theme_fivethirtyeight())
+
+
+# theme_set(theme_minimal(15) +
+#             theme(legend.position = "bottom",
+#                   panel.grid.major.x = element_line(colour = "gray60"),
+#                   panel.grid.minor.x = element_blank(),
+#                   panel.grid.major.y = element_blank())
+#           )
+
+sup_data <- import(here("data", "supervisor_survey.sav"),
+                   setclass = "tbl_df") %>% 
+  characterize() %>% 
+  janitor::clean_names()
 ```
 
-Column {data-width=650}
+# Supervisor Information 
+
+Row {.tabset}
 -----------------------------------------------------------------------
 
-### Chart A
+### Supervisors per Clinic
 
-```{r}
+```{r, include=FALSE}
+str(sup_data)
+
+sup_clinic <- sup_data %>% 
+  count(q1)
+  
+sup_clinic_tbl <- sup_clinic %>% 
+  reactable(
+    defaultColDef = colDef(align = "center"),
+    columns = list(
+      q1 = colDef(name = "Clinic Assignments"),
+      n = colDef(name = "Total")),
+    pagination = TRUE,
+    striped = TRUE,
+    outlined = TRUE,
+    compact = TRUE,
+    highlight = TRUE,
+    bordered = TRUE,
+    searchable = TRUE
+  )
 
 ```
 
-Column {data-width=350}
+```{r, include=TRUE}
+sup_clinic_tbl
+```
+
+Row {.tabset}
 -----------------------------------------------------------------------
 
-### Chart B
+### Years Supervising for CDS
 
-```{r}
+```{r, include=FALSE}
+sup_years <- sup_data %>% 
+  count(q2)
 
+year_order <- c("Five or more years",
+                "Three to five years",
+                "One to three years",
+                "Less than one year")
+
+year_plot <- ggplot(sup_years, aes(q2, n)) +
+  geom_col(fill = "#008dbf",
+           alpha = 0.7) +
+  scale_x_discrete(limits = year_order) +
+  scale_y_continuous(limits = c(0,10),
+                     breaks = c(0 ,2, 4, 6, 8, 10)) +
+  coord_flip() +
+  geom_text(aes(q2, n, label = n),
+            nudge_y = -0.7,
+            color = "white",
+            size = 5) +
+  theme(plot.title = element_text(color = "black", face = "bold", hjust = 0.5)) +
+  labs(x = "",
+       y = "Total")
+
+year_plot
 ```
 
-### Chart C
-
-```{r}
-
+```{r, include=TRUE}
+ggplotly(year_plot)
 ```
 
+### Years by Clinic 
+
+```{r, include=FALSE}
+sup_clinic_years <- sup_data %>% 
+  group_by(q1, q2) %>% 
+  summarize(total = n()) %>% 
+  arrange(desc(total))
+  
+clinic_years_tbl <- sup_clinic_years %>% 
+  reactable(
+    defaultColDef = colDef(align = "center"),
+    columns = list(
+      q1 = colDef(name = "Clinic Assignments"),
+      q2 = colDef(name = "Years"),
+      total = colDef(name = "Total")),
+    pagination = TRUE,
+    striped = TRUE,
+    outlined = TRUE,
+    compact = TRUE,
+    highlight = TRUE,
+    bordered = TRUE,
+    searchable = TRUE    
+    )
+```
+
+```{r, include=TRUE}
+clinic_years_tbl
+```
+
+# Survey Results
