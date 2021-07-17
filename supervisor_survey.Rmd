@@ -494,9 +494,9 @@ Row {.tabset}
 qu9 <- sq_df(sup_data,
             response,
             q1,
-            q9) %>% 
+            q11) %>% 
   rename("assignment" = q1,
-         "answer" = q9) 
+         "answer" = q11) 
 
 ```
 
@@ -787,7 +787,7 @@ str(qu21)
 ```
 
 ```{r, include=TRUE}
-survey_tbl(qu21, response, q1, qu24_1)
+survey_tbl(qu21, response, assignment, answer)
 ```
 
 Row {.tabset}
@@ -808,7 +808,7 @@ head(qu22)
 ```
 
 ```{r, include=TRUE}
-survey_tbl(qu22, response, q1, qu24_1)
+survey_tbl(qu22, response, assignment, answer)
 ```
 
 
@@ -829,7 +829,7 @@ head(qu23)
 ```
 
 ```{r, include=TRUE}
-survey_tbl(qu23, response, q1, qu26_1)
+survey_tbl(qu23, response, assignment, answer)
 ```
 
 Row {.tabset}
@@ -850,7 +850,7 @@ head(qu24)
 ```
 
 ```{r, include=TRUE}
-survey_tbl(qu24, response, q1, qu27)
+survey_tbl(qu24, response, assignment, answer)
 ```
 
 Row {.tabset}
@@ -871,7 +871,7 @@ head(qu25)
 ```
 
 ```{r, include=TRUE}
-survey_tbl(qu25, response, q1, qu28)
+survey_tbl(qu25, response, assignment, answer)
 ```
 
 Row {.tabset}
@@ -892,7 +892,7 @@ head(qu26)
 ```
 
 ```{r, include=TRUE}
-survey_tbl(qu26, response, q1, qu29)
+survey_tbl(qu26, response, assignment, answer)
 ```
 
 
