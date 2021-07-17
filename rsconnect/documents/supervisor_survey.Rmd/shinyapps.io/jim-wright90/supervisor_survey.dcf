@@ -1,0 +1,13 @@
+name: supervisor_survey
+title: supervisor_survey
+username:
+account: jim-wright90
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 4394455
+bundleId: 4828206
+url: https://jim-wright90.shinyapps.io/supervisor_survey/
+when: 1626495089.83781
+lastSyncTime: 1626495089.83784
+asMultiple: FALSE
+asStatic: FALSE
