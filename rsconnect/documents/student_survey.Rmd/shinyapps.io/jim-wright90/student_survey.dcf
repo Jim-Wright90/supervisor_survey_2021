@@ -1,0 +1,13 @@
+name: student_survey
+title: student_survey
+username:
+account: jim-wright90
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 4466956
+bundleId: 4899260
+url: https://jim-wright90.shinyapps.io/student_survey/
+when: 1628367439.25937
+lastSyncTime: 1628367439.25938
+asMultiple: FALSE
+asStatic: FALSE

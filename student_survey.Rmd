@@ -1,0 +1,802 @@
+---
+title: "Student Survey"
+runtime: shiny
+output:
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    social: menu
+    source_code: embed
+    vertical_layout: scroll
+    theme: yeti
+resource_files:
+- data/student_survey.sav
+---
+
+```{r global, include=FALSE}
+library(shiny)
+library(tidyverse)
+library(here)
+library(janitor)
+library(rio)
+library(colorblindr)
+library(gghighlight)
+library(forcats)
+library(ggrepel)
+library(gt)
+library(knitr)
+library(kableExtra)
+library(reactable)
+library(plotly)
+library(glue)
+library(fs)
+library(prettydoc)
+
+theme_fivethirtyeight <- function(base_size = 15, base_family = "") {
+  theme_grey(base_size = base_size, base_family = base_family) %+replace%
+    theme(
+
+      # Base elements which are not used directly but inherited by others
+      line =              element_line(colour = '#DADADA', size = 0.75,
+                                       linetype = 1, lineend = "butt"),
+      rect =              element_rect(fill = "#F0F0F0", colour = "#F0F0F0",
+                                       size = 0.5, linetype = 1),
+      text =              element_text(family = base_family, face = "plain",
+                                       colour = "#656565", size = base_size,
+                                       hjust = 0.5, vjust = 0.5, angle = 0,
+                                       lineheight = 0.9),
+
+      # Modified inheritance structure of text element
+      plot.title =        element_text(size = rel(1.5), family = '' ,
+                                       face = 'bold', hjust = -0.05,
+                                       vjust = 1.5, colour = '#3B3B3B'),
+      axis.title.x =      element_blank(),
+      axis.title.y =      element_blank(),
+      axis.text =         element_text(),
+
+      # Modified inheritance structure of line element
+      axis.ticks =        element_line(),
+      panel.grid.major =  element_line(),
+      panel.grid.minor =  element_blank(),
+
+      # Modified inheritance structure of rect element
+      plot.background =   element_rect(),
+      panel.background =  element_rect(),
+      legend.key =        element_rect(colour = '#DADADA'),
+
+      # Modifiying legend.position
+      legend.position = 'none',
+
+      complete = TRUE
+    )
+}
+
+
+theme_set(theme_fivethirtyeight())
+
+
+# theme_set(theme_minimal(15) +
+#             theme(legend.position = "bottom",
+#                   panel.grid.major.x = element_line(colour = "gray60"),
+#                   panel.grid.minor.x = element_blank(),
+#                   panel.grid.major.y = element_blank())
+#           )
+
+stud <- import(here("data", "student_survey.sav"),
+                   setclass = "tbl_df") %>% 
+  characterize() %>% 
+  janitor::clean_names()
+
+str(stud)
+
+stud <- stud %>% 
+  mutate(q1 = as.factor(q1),
+         interest = as.factor(interest))
+
+str(stud)
+
+rot_order <- import(here("data", "rotation_order.xlsx"),
+                   setclass = "tbl_df") 
+
+```
+
+# Student Information 
+
+Sidebar {.sidebar}
+------------
+
+Survey not completed by:
+
+  1. Max Nath (Group 3)
+  2. Giselle Marquez (Group 1)
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Student List
+
+```{r, include=FALSE}
+stud_tbl <- stud %>% 
+  select(student_name, q1, interest) %>% 
+  reactable( 
+    defaultColDef = colDef(align = "center"),
+    columns = list(
+      student_name = colDef(name = "Student"),
+      q1 = colDef(name = "Group Number"),
+      interest = colDef(name = "Group Interest")),
+    pagination = TRUE,
+    striped = TRUE,
+    outlined = TRUE,
+    compact = TRUE,
+    highlight = TRUE,
+    bordered = TRUE,
+    searchable = TRUE    
+  )
+
+```
+
+```{r, include=TRUE}
+stud_tbl
+```
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Rotation Order
+
+```{r, include=FALSE}
+order_tbl <- rot_order %>% 
+  reactable( 
+    defaultColDef = colDef(align = "center"),
+    columns = list(
+      `Student Group` = colDef(name = "Student Group"),
+      `Fall Term 1` = colDef(name = "Fall Term 1"),
+      `Winter Term` = colDef(name = "Winter Term"),
+      `Spring Term` = colDef(name = "Spring Term"),
+      `Summer Term` = colDef(name = "Summer Term"),
+      `Fall Term 2` = colDef(name = "Fall Term 2")),
+    pagination = TRUE,
+    striped = TRUE,
+    outlined = TRUE,
+    compact = TRUE,
+    highlight = TRUE,
+    bordered = TRUE,
+    #searchable = TRUE    
+  )
+```
+
+```{r, include=TRUE}
+order_tbl
+```
+
+
+# Survey Results
+
+Sidebar {.sidebar}
+------------
+
+```{r, include=TRUE}
+selectInput("groups",
+            "Student Groups:",
+            choices = levels(stud$q1))
+
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Question 1: It is more important that supervisors have consistent SOAP/DARP note due dates for students **within** the same clinic (e.g., the students in your mini-cohort) instead of demonstrating flexibility dependent upon student/client situation/needs
+
+```{r, include=FALSE}
+sq_df <- function(df, a, b, c) {
+  df %>% 
+    select({{a}}, {{b}}, {{c}}) 
+}
+
+qu1 <- sq_df(stud,
+             student_name,
+             q1, 
+             q2) %>% 
+  rename("student_group" = q1,
+         "response" = q2)
+
+agree_resp <- c("Strongly disagree",
+                "Somewhat disagree",
+                "Neither agree nor disagree",
+                "Somewhat agree",
+                "Strongly agree")
+
+agree_resp2 <- c("Strongly agree",
+                 "Somewaht agree",
+                 "Neither agree nor disagree",
+                 "Somewhat disagree",
+                 "Strongly disagree")
+
+imp_resp <- c("Not at all important",
+                 "Slightly important",
+                 "Moderately important",
+                 "Very important",
+                 "Extremely important")
+
+imp_resp2 <- c("Extremely important",
+                  "Very important",
+                  "Moderately important",
+                  "Slightly important",
+                  "Not at all important")
+
+```
+
+
+```{r, include=FALSE}
+survey_plot <- function(df) {
+  renderPlotly({
+  df %>% 
+  filter(student_group %in% input$groups) %>% 
+  ggplot(aes(response, student_name)) +
+  geom_point(aes(color = response)) +
+  scale_color_OkabeIto() +
+  scale_x_discrete(limits = agree_resp) +
+  theme(plot.title = element_text(color = "black", face = "bold", hjust = 0.5),
+        plot.subtitle = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, size = 11.5)) +
+  labs(x = "",
+       y = "",
+       color = NULL,
+    title = input$groups)    
+})  
+}
+
+total_plot <- function(df) {
+  renderPlotly({
+  df %>%
+  ggplot(aes(response)) +
+  geom_bar(aes(fill = student_group), alpha = 0.9) +
+  scale_x_discrete(limits = agree_resp2) +
+  scale_y_continuous(limits = c(0, 20),
+                     breaks = c(0, 5, 10, 15, 20)) +
+  scale_fill_OkabeIto() +    
+  #scale_fill_brewer(palette = "Set3") +
+  coord_flip() +
+  theme(legend.title = element_blank()) +
+  labs(y = "Number of Responses",
+         x = "")
+  })
+}
+
+
+survey_plot2 <- function(df) {
+  renderPlotly({
+  df %>% 
+  filter(student_group %in% input$groups) %>% 
+  ggplot(aes(response, student_name)) +
+  geom_point(aes(color = response)) +
+  scale_color_OkabeIto() +
+  scale_x_discrete(limits = imp_resp) +
+  theme(plot.title = element_text(color = "black", face = "bold", hjust = 0.5),
+        plot.subtitle = element_text(color = "black", face = "bold"),
+        axis.text.x = element_text(angle = 45, size = 11.5)) +
+  labs(x = "",
+       y = "",
+       color = NULL,
+    title = input$groups)    
+})  
+}
+
+total_plot2 <- function(df) {
+  renderPlotly({
+  df %>%
+  ggplot(aes(response)) +
+  geom_bar(aes(fill = student_group), alpha = 0.9) +
+  scale_x_discrete(limits = imp_resp2) +
+  scale_y_continuous(limits = c(0, 20),
+                     breaks = c(0, 5, 10, 15, 20)) +
+  scale_fill_OkabeIto() +    
+  #scale_fill_brewer(palette = "Set3") +
+  coord_flip() +
+  theme(legend.title = element_blank()) +
+  labs(y = "Number of Responses",
+         x = "")
+  })
+}
+```
+
+```{r, include=TRUE}
+survey_plot(qu1)
+```
+
+### Response Total
+
+```{r, include=TRUE}
+total_plot(qu1)
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Question 2: It is more important that supervisors have consistent SOAP/DARP note due dates for students **across different** clinics instead of demonstrating flexibility dependent upon student/client situations/needs
+
+```{r, include=FALSE}
+qu2 <- sq_df(stud,
+             student_name,
+             q1, 
+             q3) %>% 
+  rename("student_group" = q1,
+         "response" = q3)
+```
+
+```{r, include=TRUE}
+survey_plot(qu2)
+```
+
+### Response Total
+
+```{r, include=TRUE}
+total_plot(qu2)
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Question 3: It is more important that supervisors have consistent ITP due dates for students **within** the same clinic instead of demonstrating flexibility dependent upon student/client situations/needs
+
+```{r, include=FALSE}
+qu3 <- sq_df(stud,
+             student_name,
+             q1, 
+             q4) %>% 
+  rename("student_group" = q1,
+         "response" = q4)
+```
+
+```{r, include=TRUE}
+survey_plot(qu3)
+```
+
+### Response Total
+
+```{r, include=TRUE}
+total_plot(qu3)
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Question 4: It is more important that supervisors have consistent ITP due dates for students **across different** clinics instead of demonstrating flexibility dependent upon student/client situations/needs
+
+```{r, include=FALSE}
+qu4 <- sq_df(stud,
+             student_name,
+             q1, 
+             q5) %>% 
+  rename("student_group" = q1,
+         "response" = q5)
+```
+
+```{r, include=TRUE}
+survey_plot(qu4)
+```
+
+### Response Total
+
+```{r, include=TRUE}
+total_plot(qu4)
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Question 5: Of the clinics you have participated in, please specify the average number of weekly minutes you met with supervisors individually to discuss clients (specify the average number for each clinic participated in)
+
+```{r, include=FALSE}
+qu5 <- sq_df(stud,
+             student_name,
+             q1, 
+             q6) %>% 
+  rename("student_group" = q1,
+         "response" = q6)
+```
+
+```{r, include=FALSE}
+survey_tbl <- function(df, a, b, c) {
+  df %>% 
+    reactable(
+      defaultColDef = colDef(align = "center"),
+      columns = list(
+        student_name = colDef(name = "Student"),
+        student_group = colDef(name = "Group Number"),
+        response = colDef(name = "Response")),
+    pagination = TRUE,
+    striped = TRUE,
+    outlined = TRUE,
+    compact = TRUE,
+    highlight = TRUE,
+    bordered = TRUE,
+    searchable = TRUE
+      )
+}
+```
+
+```{r, include=TRUE}
+survey_tbl(qu5, student_name, student_group, response)
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Question 6: How important is it to you that different supervisors **within** the same clinic are consistent on how often they meet with students to discuss clients from that clinic?
+
+```{r, include=FALSE}
+qu6 <- sq_df(stud,
+             student_name,
+             q1, 
+             q7) %>% 
+  rename("student_group" = q1,
+         "response" = q7)
+```
+
+```{r, include=TRUE}
+survey_plot2(qu6)
+```
+
+### Response Total
+
+```{r, include=TRUE}
+total_plot2(qu6)
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Question 7: How important is it you that supervisors **across different** clinics are consistent on how often they meet with students individually?
+
+```{r, include=FALSE}
+qu7 <- sq_df(stud,
+             student_name,
+             q1, 
+             q8) %>% 
+  rename("student_group" = q1,
+         "response" = q8)
+```
+
+```{r, include=TRUE}
+survey_plot2(qu7)
+```
+
+### Response Total
+
+```{r, include=TRUE}
+total_plot2(qu7)
+```
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Question 8: Please specify the average number of hours you engage in group meetings for each clinic you have participated in so far
+
+```{r, include=FALSE}
+qu8 <- sq_df(stud,
+             student_name,
+             q1, 
+             q9) %>% 
+  rename("student_group" = q1,
+         "response" = q9)
+```
+
+```{r, include=TRUE}
+survey_tbl(qu8, student_name, student_group, response)
+```
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Question 9: How important is it to you that supervisors are consistent on how long they hold group meetings per week **across different** clinics?
+
+```{r, include=FALSE}
+qu9 <- sq_df(stud,
+             student_name,
+             q1, 
+             q10) %>% 
+  rename("student_group" = q1,
+         "response" = q10)
+```
+
+```{r, include=TRUE}
+survey_plot2(qu9)
+```
+
+### Response Total
+
+```{r, include=TRUE}
+total_plot2(qu9)
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Question 10: On average, how much time during the Spring 2021 term was your supervisor "camera on" while supervising one of your one-time-per-week clients? Please specify the clinic you participated in during the Spring 2021 term with your response
+
+```{r, include=FALSE}
+qu10 <- sq_df(stud,
+             student_name,
+             q1, 
+             q11) %>% 
+  rename("student_group" = q1,
+         "response" = q11)
+```
+
+```{r, include=TRUE}
+survey_tbl(qu10, student_name, student_group, response)
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Question 11: My supervisor having their camera on during the session is more important to me than the supervisor having their camera off allowing me to demonstrate more independence in session as my clinical skills grow
+
+```{r, include=FALSE}
+qu11 <- sq_df(stud,
+             student_name,
+             q1, 
+             q12) %>% 
+  rename("student_group" = q1,
+         "response" = q12)
+```
+
+```{r, include=TRUE}
+survey_plot(qu11)
+```
+
+### Response Total
+
+```{r, include=TRUE}
+total_plot(qu11)
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Question 12: Please specify how often you have immediately debriefed with your supervisor(s) immediately after sessions. Please indicate the frequency of debriefing for each clinic you have participated in
+
+```{r, include=FALSE}
+qu12 <- sq_df(stud,
+             student_name,
+             q1, 
+             q13) %>% 
+  rename("student_group" = q1,
+         "response" = q13)
+```
+
+```{r, include=TRUE}
+survey_tbl(qu12, student_name, student_group, response)
+```
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Question 13: It is not always possible for supervisors to debrief after a session. Receiving written feedback immediately after my session facilitates my learning in a similar way
+
+```{r, include=FALSE}
+qu13 <- sq_df(stud,
+             student_name,
+             q1, 
+             q14) %>% 
+  rename("student_group" = q1,
+         "response" = q14)
+```
+
+```{r, include=TRUE}
+survey_plot(qu13)
+```
+
+### Response Total
+
+```{r, include=TRUE}
+total_plot(qu13)
+```
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Question 14: If you have received a critical concern, please specify why it was issued
+
+```{r, include=FALSE}
+qu14 <- sq_df(stud,
+             student_name,
+             q1, 
+             q15) %>% 
+  rename("student_group" = q1,
+         "response" = q15)
+```
+
+```{r, include=TRUE}
+survey_tbl(qu14, student_name, student_group, response)
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Question 15: It is more important that supervisors **within** the same clinic are consistent on the rationale for issuing a critical concern instead of demonstrating flexibility dependent upon student situations/needs
+
+```{r, include=FALSE}
+qu15 <- sq_df(stud,
+             student_name,
+             q1, 
+             q16) %>% 
+  rename("student_group" = q1,
+         "response" = q16)
+```
+
+```{r, include=TRUE}
+survey_plot(qu15)
+```
+
+### Response Total
+
+```{r, include=TRUE}
+total_plot(qu15)
+```
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Question 16: It is more important that supervisors **across different** clinics are consistent on the rationale for issuing a critical concern instead of demonstrating flexibility dependent upon student situations/needs
+
+```{r, include=FALSE}
+qu16 <- sq_df(stud,
+             student_name,
+             q1, 
+             q17) %>% 
+  rename("student_group" = q1,
+         "response" = q17)
+```
+
+```{r, include=TRUE}
+survey_plot(qu16)
+```
+
+### Response Total
+
+```{r, include=TRUE}
+total_plot(qu16)
+```
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Question 17: How satisfied are you with the clinical supervision you have received so far during your program? (0 - 5 rating scale)
+
+```{r, include=FALSE}
+qu17 <- sq_df(stud,
+             student_name,
+             q1, 
+             q18_1) %>% 
+  rename("student_group" = q1,
+         "response" = q18_1)
+```
+
+```{r, include=TRUE}
+survey_tbl(qu17, student_name, student_group, response)
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Question 18: If less than 5 (highest satisfaction level), what would increase your satisfaction with clinical supervision?
+
+```{r, include=FALSE}
+qu18 <- sq_df(stud,
+             student_name,
+             q1, 
+             q19) %>% 
+  rename("student_group" = q1,
+         "response" = q19)
+```
+
+```{r, include=TRUE}
+survey_tbl(qu18, student_name, student_group, response)
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Question 19: The UO CDS program utilizes the [Anderson model of supervision](https://coe.uoregon.edu/cds/files/2019/10/andersoncontinuum.pdf). How closely has the supervision you have received followed this model? Please specify for each clinic you have participated in
+
+```{r, include=FALSE}
+qu19 <- sq_df(stud,
+             student_name,
+             q1, 
+             q20) %>% 
+  rename("student_group" = q1,
+         "response" = q20)
+```
+
+```{r, include=TRUE}
+survey_tbl(qu19, student_name, student_group, response)
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Question 20: Student centered supervision would focus more on meeting students where they are academically, clinically, emotionally, financially, etc. This would mean less standardization of scoring and critical concerns. It's a more flexible and dynamic model that relies on supervisor judgement and flexibility and interpretation of competencies. It would allow more flexibility in deadlines, direct support in session, debriefing as well as less rigid documentation expectations.I believe this model of supervision closely aligns with the CDS program's goals and culture
+
+```{r, include=FALSE}
+qu20 <- sq_df(stud,
+             student_name,
+             q1, 
+             q21) %>% 
+  rename("student_group" = q1,
+         "response" = q21)
+```
+
+```{r, include=TRUE}
+survey_plot(qu20)
+```
+
+### Response Total
+
+```{r, include=TRUE}
+total_plot(qu20)
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Question 21: Standardization **within** the same clinic is more important to me than a flexible, student centered approach
+
+```{r, include=FALSE}
+qu21 <- sq_df(stud,
+             student_name,
+             q1, 
+             q22) %>% 
+  rename("student_group" = q1,
+         "response" = q22)
+```
+
+```{r, include=TRUE}
+survey_plot(qu21)
+```
+
+### Response Total
+
+```{r, include=TRUE}
+total_plot(qu21)
+```
+
+
+Row {.tabset}
+-----------------------------------------------------------------------
+
+### Question 22: Standardization **across different** clinics is more important to me than a flexible, student centered approach
+
+```{r, include=FALSE}
+qu22 <- sq_df(stud,
+             student_name,
+             q1, 
+             q23) %>% 
+  rename("student_group" = q1,
+         "response" = q23)
+```
+
+```{r, include=TRUE}
+survey_plot(qu22)
+```
+
+### Response Total
+
+```{r, include=TRUE}
+total_plot(qu22)
+```
