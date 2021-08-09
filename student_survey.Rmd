@@ -246,11 +246,11 @@ total_plot <- function(df) {
   renderPlotly({
   df %>%
   ggplot(aes(response)) +
-  geom_bar(aes(fill = student_group), alpha = 0.9) +
+  geom_bar(fill = "#008DBF", alpha = 0.9) +
   scale_x_discrete(limits = agree_resp2) +
   scale_y_continuous(limits = c(0, 20),
                      breaks = c(0, 5, 10, 15, 20)) +
-  scale_fill_OkabeIto() +    
+  # scale_fill_OkabeIto() +    
   #scale_fill_brewer(palette = "Set3") +
   coord_flip() +
   theme(legend.title = element_blank()) +
@@ -282,11 +282,11 @@ total_plot2 <- function(df) {
   renderPlotly({
   df %>%
   ggplot(aes(response)) +
-  geom_bar(aes(fill = student_group), alpha = 0.9) +
+  geom_bar(fill = "#008DBF", alpha = 0.9) +
   scale_x_discrete(limits = imp_resp2) +
   scale_y_continuous(limits = c(0, 20),
                      breaks = c(0, 5, 10, 15, 20)) +
-  scale_fill_OkabeIto() +    
+  # scale_fill_OkabeIto() +    
   #scale_fill_brewer(palette = "Set3") +
   coord_flip() +
   theme(legend.title = element_blank()) +
