@@ -10,6 +10,7 @@ output:
     theme: yeti
 resource_files:
 - data/student_survey.sav
+- data/rotation_order.xlsx
 ---
 
 ```{r global, include=FALSE}
@@ -74,12 +75,7 @@ theme_fivethirtyeight <- function(base_size = 15, base_family = "") {
 theme_set(theme_fivethirtyeight())
 
 
-# theme_set(theme_minimal(15) +
-#             theme(legend.position = "bottom",
-#                   panel.grid.major.x = element_line(colour = "gray60"),
-#                   panel.grid.minor.x = element_blank(),
-#                   panel.grid.major.y = element_blank())
-#           )
+
 
 stud <- import(here("data", "student_survey.sav"),
                    setclass = "tbl_df") %>% 
