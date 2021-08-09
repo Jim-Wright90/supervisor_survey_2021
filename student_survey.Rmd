@@ -296,8 +296,34 @@ total_plot2 <- function(df) {
 }
 ```
 
+```{r, include=FALSE}
+survey_tbl <- function(df, a, b, c) {
+  df %>% 
+    reactable(
+      defaultColDef = colDef(align = "center"),
+      columns = list(
+        student_name = colDef(name = "Student"),
+        student_group = colDef(name = "Group Number"),
+        response = colDef(name = "Response")),
+    pagination = TRUE,
+    striped = TRUE,
+    outlined = TRUE,
+    compact = TRUE,
+    highlight = TRUE,
+    bordered = TRUE,
+    searchable = TRUE
+      )
+}
+```
+
 ```{r, include=TRUE}
 survey_plot(qu1)
+```
+
+### Student Responses 
+
+```{r, include=TRUE}
+survey_tbl(qu1)
 ```
 
 ### Response Total
@@ -325,6 +351,12 @@ qu2 <- sq_df(stud,
 survey_plot(qu2)
 ```
 
+### Student Responses 
+
+```{r, include=TRUE}
+survey_tbl(qu2)
+```
+
 ### Response Total
 
 ```{r, include=TRUE}
@@ -348,6 +380,12 @@ qu3 <- sq_df(stud,
 
 ```{r, include=TRUE}
 survey_plot(qu3)
+```
+
+### Student Responses 
+
+```{r, include=TRUE}
+survey_tbl(qu3)
 ```
 
 ### Response Total
@@ -375,6 +413,12 @@ qu4 <- sq_df(stud,
 survey_plot(qu4)
 ```
 
+### Student Responses 
+
+```{r, include=TRUE}
+survey_tbl(qu4)
+```
+
 ### Response Total
 
 ```{r, include=TRUE}
@@ -396,25 +440,6 @@ qu5 <- sq_df(stud,
          "response" = q6)
 ```
 
-```{r, include=FALSE}
-survey_tbl <- function(df, a, b, c) {
-  df %>% 
-    reactable(
-      defaultColDef = colDef(align = "center"),
-      columns = list(
-        student_name = colDef(name = "Student"),
-        student_group = colDef(name = "Group Number"),
-        response = colDef(name = "Response")),
-    pagination = TRUE,
-    striped = TRUE,
-    outlined = TRUE,
-    compact = TRUE,
-    highlight = TRUE,
-    bordered = TRUE,
-    searchable = TRUE
-      )
-}
-```
 
 ```{r, include=TRUE}
 survey_tbl(qu5, student_name, student_group, response)
@@ -437,6 +462,12 @@ qu6 <- sq_df(stud,
 
 ```{r, include=TRUE}
 survey_plot2(qu6)
+```
+
+### Student Responses 
+
+```{r, include=TRUE}
+survey_tbl(qu6)
 ```
 
 ### Response Total
@@ -462,6 +493,12 @@ qu7 <- sq_df(stud,
 
 ```{r, include=TRUE}
 survey_plot2(qu7)
+```
+
+### Student Responses 
+
+```{r, include=TRUE}
+survey_tbl(qu7)
 ```
 
 ### Response Total
@@ -504,6 +541,12 @@ qu9 <- sq_df(stud,
 
 ```{r, include=TRUE}
 survey_plot2(qu9)
+```
+
+### Student Responses 
+
+```{r, include=TRUE}
+survey_tbl(qu9)
 ```
 
 ### Response Total
@@ -550,6 +593,12 @@ qu11 <- sq_df(stud,
 survey_plot(qu11)
 ```
 
+### Student Responses 
+
+```{r, include=TRUE}
+survey_tbl(qu11)
+```
+
 ### Response Total
 
 ```{r, include=TRUE}
@@ -591,6 +640,12 @@ qu13 <- sq_df(stud,
 
 ```{r, include=TRUE}
 survey_plot(qu13)
+```
+
+### Student Responses 
+
+```{r, include=TRUE}
+survey_tbl(qu13)
 ```
 
 ### Response Total
@@ -636,6 +691,12 @@ qu15 <- sq_df(stud,
 survey_plot(qu15)
 ```
 
+### Student Responses 
+
+```{r, include=TRUE}
+survey_tbl(qu15)
+```
+
 ### Response Total
 
 ```{r, include=TRUE}
@@ -658,6 +719,12 @@ qu16 <- sq_df(stud,
 
 ```{r, include=TRUE}
 survey_plot(qu16)
+```
+
+### Student Responses 
+
+```{r, include=TRUE}
+survey_tbl(qu16)
 ```
 
 ### Response Total
@@ -741,6 +808,12 @@ qu20 <- sq_df(stud,
 survey_plot(qu20)
 ```
 
+### Student Responses 
+
+```{r, include=TRUE}
+survey_tbl(qu20)
+```
+
 ### Response Total
 
 ```{r, include=TRUE}
@@ -766,6 +839,12 @@ qu21 <- sq_df(stud,
 survey_plot(qu21)
 ```
 
+### Student Responses 
+
+```{r, include=TRUE}
+survey_tbl(qu21)
+```
+
 ### Response Total
 
 ```{r, include=TRUE}
@@ -789,6 +868,12 @@ qu22 <- sq_df(stud,
 
 ```{r, include=TRUE}
 survey_plot(qu22)
+```
+
+### Student Responses 
+
+```{r, include=TRUE}
+survey_tbl(qu22)
 ```
 
 ### Response Total
